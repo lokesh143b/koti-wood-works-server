@@ -1,0 +1,289 @@
+API Documentation for Photo & Admin APIs
+Base URL: http://<your-server-domain>/api
+
+Admin Authentication & Management
+1. Register Admin
+POST /admin/register
+
+Request body (JSON):
+
+json
+Copy
+Edit
+{
+  "name": "Admin Name",
+  "email": "admin@example.com",
+  "password": "yourpassword"
+}
+Response (201 Created):
+
+json
+Copy
+Edit
+{
+  "id": "<adminId>",
+  "name": "Admin Name",
+  "email": "admin@example.com",
+  "token": "<JWT token>"
+}
+2. Login Admin
+POST /admin/login
+
+Request body (JSON):
+
+json
+Copy
+Edit
+{
+  "email": "admin@example.com",
+  "password": "yourpassword"
+}
+Response (200 OK):
+
+json
+Copy
+Edit
+{
+  "id": "<adminId>",
+  "name": "Admin Name",
+  "email": "admin@example.com",
+  "token": "<JWT token>"
+}
+3. Change Password
+POST /admin/change-password
+
+Headers:
+
+Authorization: Bearer <JWT token>
+
+Request body (JSON):
+
+json
+Copy
+Edit
+{
+  "oldPassword": "oldpassword",
+  "newPassword": "newpassword"
+}
+Response (200 OK):
+
+json
+Copy
+Edit
+{
+  "message": "Password changed successfully"
+}
+Photo Management
+Note: All photo upload, update, and delete APIs require Authorization header with a valid Admin JWT token.
+
+1. Get All Photos (Public)
+GET /photos
+
+Query params:
+
+page (optional, default: 1)
+
+limit (optional, default: 5)
+
+Response (200 OK):
+
+json
+Copy
+Edit
+{
+  "page": 1,
+  "totalPages": 10,
+  "totalPhotos": 50,
+  "photos": [
+    {
+      "_id": "<photoId>",
+      "imageUrl": "https://res.cloudinary.com/your-cloud/image/upload/...",
+      "uploadedBy": {
+        "_id": "<adminId>",
+        "name": "Admin Name",
+        "email": "admin@example.com"
+      },
+      "createdAt": "2024-05-29T10:00:00.000Z"
+    },
+    ...
+  ]
+}
+2. Upload Photo (Admin only)
+POST /photos/upload
+
+Headers:
+
+Authorization: Bearer <JWT token>
+
+Form Data (multipart/form-data):
+
+image: (file) Image file (jpg, png, jpeg)
+
+Response (201 Created):
+
+json
+Copy
+Edit
+{
+  "_id": "<photoId>",
+  "imageUrl": "https://res.cloudinary.com/your-cloud/image/upload/...",
+  "uploadedBy": "<adminId>",
+  "createdAt": "2024-05-29T10:00:00.000Z"
+}
+3. Update Photo (Admin only)
+PUT /photos/:id
+
+URL Params:
+
+id: Photo document ID
+
+Headers:
+
+Authorization: Bearer <JWT token>
+
+Form Data (multipart/form-data):
+
+image: (file) New image file to replace the old one
+
+Response (200 OK):
+
+json
+Copy
+Edit
+{
+  "message": "Photo updated successfully",
+  "photo": {
+    "_id": "<photoId>",
+    "imageUrl": "https://res.cloudinary.com/your-cloud/image/upload/...",
+    "uploadedBy": "<adminId>",
+    "createdAt": "2024-05-29T10:00:00.000Z"
+  }
+}
+4. Delete Photo (Admin only)
+DELETE /photos/:id
+
+URL Params:
+
+id: Photo document ID
+
+Headers:
+
+Authorization: Bearer <JWT token>
+
+Response (200 OK):
+
+json
+Copy
+Edit
+{
+  "message": "Photo deleted successfully"
+}
+
+
+
+------------------------------For photos---------------------------
+
+KOTI WOOD WORKS - PHOTO MANAGEMENT API
+--------------------------------------
+
+BASE URL:
+  /api/photos
+
+--------------------------------------
+PUBLIC ROUTES (NO AUTH REQUIRED)
+--------------------------------------
+
+GET /api/photos
+  Description: Get a paginated list of photos.
+
+  Query Parameters:
+    - page (Number, default: 1): Page number
+    - limit (Number, default: 5): Items per page
+
+  Example Response:
+    {
+      "page": 1,
+      "totalPages": 3,
+      "totalPhotos": 15,
+      "photos": [ ... ]
+    }
+
+--------------------------------------
+ADMIN ROUTES (AUTH REQUIRED)
+--------------------------------------
+
+NOTE: All admin routes require Authorization header:
+  Authorization: Bearer <admin_token>
+
+--------------------------------------
+
+POST /api/photos/upload
+  Description: Upload a new photo.
+
+  Form Data (multipart/form-data):
+    - image (File)            [Required]
+    - name (String)           [Required]
+    - category (String)       [Optional]
+    - description (String)    [Optional]
+
+  Example Response:
+    {
+      "_id": "123",
+      "name": "Living Room Design",
+      "category": "Furniture",
+      "description": "Modern teak wood sofa set",
+      "imageUrl": "/uploads/filename.jpg",
+      "public_id": "abc123",
+      "createdAt": "2025-06-01T12:00:00Z"
+    }
+
+--------------------------------------
+
+PUT /api/photos/:id
+  Description: Update photo details and/or image.
+
+  Form Data (any or all):
+    - name (String)
+    - category (String)
+    - description (String)
+    - image (File)     [Optional]
+
+  Example Response:
+    {
+      "_id": "123",
+      "name": "Updated Name",
+      ...
+    }
+
+--------------------------------------
+
+DELETE /api/photos/:id
+  Description: Delete photo and associated image from Cloudinary (if applicable).
+
+  Example Response:
+    {
+      "message": "Photo deleted successfully"
+    }
+
+--------------------------------------
+ADMIN DASHBOARD ROUTE
+--------------------------------------
+
+GET /api/admin/dashboard
+  Description: Get admin dashboard stats.
+
+  Example Response:
+    {
+      "adminName": "John",
+      "totalPhotos": 35,
+      "recentUploads": 6
+    }
+
+--------------------------------------
+IMPORTANT PATHS (INTERNAL REFERENCE)
+--------------------------------------
+
+- Admin Routes Path:    /api/admin
+- Photo Routes Path:    /api/photos
+- Upload Storage Path:  req.file.path (for imageUrl)
+- Cloudinary ID Field:  photo.public_id (used for deletion)
